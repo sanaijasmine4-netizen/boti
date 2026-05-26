@@ -504,7 +504,7 @@ ${config.prefix}level
 });
 client.login(process.env.TOKEN);
 ```
-require('dotenv').config();
+
 # 3. Install Packages
 
 Run this in terminal:
