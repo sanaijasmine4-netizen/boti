@@ -77,7 +77,7 @@ const client = new Client({
 });
 
 client.once('ready', () => {
-    console.log(`${client.user.tag} is online!`);
+    console.log("${client.user.tag} is online!");
 });
 
 // =========================
@@ -92,7 +92,7 @@ client.on('guildMemberAdd', async member => {
 
     const embed = new EmbedBuilder()
         .setTitle('Welcome!')
-        .setDescription(`Welcome ${member} to the server!`)
+        .setDescription("Welcome ${member} to the server!")
         .setColor('Green')
         .setThumbnail(member.user.displayAvatarURL())
         .setTimestamp();
@@ -112,7 +112,7 @@ client.on('guildMemberRemove', async member => {
 
     const embed = new EmbedBuilder()
         .setTitle('Goodbye!')
-        .setDescription(`${member.user.tag} left the server.`)
+        .setDescription("${member.user.tag} left the server.")
         .setColor('Red')
         .setTimestamp();
 
@@ -174,10 +174,10 @@ client.on('messageCreate', async message => {
         levels[message.author.id].level += 1;
 
         message.channel.send(
-            `${message.author} leveled up to level ${levels[message.author.id].level}!`
+            "${message.author} leveled up to level ${levels[message.author.id].level}!"
         );
 
-        const levelRoleName = `Level ${levels[message.author.id].level}`;
+        const levelRoleName = "Level ${levels[message.author.id].level}";
 
         const role = message.guild.roles.cache.find(
             r => r.name === levelRoleName
@@ -189,7 +189,7 @@ client.on('messageCreate', async message => {
                 await message.member.roles.add(role);
 
                 message.channel.send(
-                    `${message.author} earned ${role.name}!`
+                    "${message.author} earned ${role.name}!"
                 );
 
             } catch (err) {
@@ -235,7 +235,7 @@ client.on('messageCreate', async message => {
 
         saveJSON('./config.json', config);
 
-        message.reply(`Welcome channel set to ${channel}`);
+        message.reply("Welcome channel set to ${channel}");
     }
 
     // =========================
@@ -258,7 +258,7 @@ client.on('messageCreate', async message => {
 
         saveJSON('./config.json', config);
 
-        message.reply(`Goodbye channel set to ${channel}`);
+        message.reply("Goodbye channel set to ${channel}");
     }
 
     // =========================
@@ -281,7 +281,7 @@ client.on('messageCreate', async message => {
 
         saveJSON('./config.json', config);
 
-        message.reply(`Prefix changed to ${newPrefix}`);
+        message.reply("Prefix changed to ${newPrefix}");
     }
 
     // =========================
@@ -306,7 +306,7 @@ client.on('messageCreate', async message => {
 
         saveJSON('./data/whitelist.json', whitelist);
 
-        message.reply(`${user.tag} added to whitelist.`);
+        message.reply("${user.tag} added to whitelist.");
     }
 
     // =========================
@@ -329,7 +329,7 @@ client.on('messageCreate', async message => {
 
         saveJSON('./data/whitelist.json', whitelist);
 
-        message.reply(`${user.tag} removed from whitelist.`);
+        message.reply("${user.tag} removed from whitelist.");
     }
 
     // =========================
@@ -400,7 +400,7 @@ client.on('messageCreate', async message => {
 
         saveJSON('./data/secureRoles.json', secureRoles);
 
-        message.reply(`${role.name} is now protected.`);
+        message.reply("${role.name} is now protected.");
     }
 
     // =========================
@@ -430,7 +430,7 @@ client.on('messageCreate', async message => {
 
         saveJSON('./data/secureRoles.json', secureRoles);
 
-        message.reply(`${user.tag} can now give ${role.name}`);
+        message.reply("${user.tag} can now give ${role.name}");
     }
 
     // =========================
@@ -457,7 +457,7 @@ client.on('messageCreate', async message => {
 
         try {
             await member.roles.add(role);
-            message.reply(`Role given to ${member.user.tag}`);
+            message.reply("Role given to ${member.user.tag}");
         } catch (err) {
             console.log(err);
             message.reply('Failed to give role.');
@@ -471,8 +471,8 @@ client.on('messageCreate', async message => {
     if (cmd === 'level') {
 
         message.reply(
-            `Level: ${levels[message.author.id].level}
-XP: ${levels[message.author.id].xp}`
+            "Level: ${levels[message.author.id].level}
+XP: ${levels[message.author.id].xp}"
         );
     }
 
@@ -485,7 +485,7 @@ XP: ${levels[message.author.id].xp}`
         const embed = new EmbedBuilder()
             .setTitle('Commands')
             .setColor('Blue')
-            .setDescription(`
+            .setDescription("
 ${config.prefix}setwelcome #channel
 ${config.prefix}setgoodbye #channel
 ${config.prefix}setprefix <prefix>
@@ -497,7 +497,7 @@ ${config.prefix}protectrole @role
 ${config.prefix}allowgiver @role @user
 ${config.prefix}giverole @user @role
 ${config.prefix}level
-            `);
+            ");
 
         message.channel.send({ embeds: [embed] });
     }
