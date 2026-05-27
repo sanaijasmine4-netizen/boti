@@ -10,7 +10,7 @@ const {
 const fs = require('fs');
 
 // =========================
-// AUTO CREATE FILES
+// CREATE FILES
 // =========================
 
 if (!fs.existsSync('./data')) {
@@ -29,12 +29,6 @@ if (!fs.existsSync('./data/levels.json')) {
     fs.writeFileSync('./data/levels.json', '{}');
 }
 
-if (!fs.existsSync('./data/whitelist.json')) {
-    fs.writeFileSync('./data/whitelist.json', JSON.stringify({
-        users: []
-    }, null, 4));
-}
-
 if (!fs.existsSync('./data/autoresponders.json')) {
     fs.writeFileSync('./data/autoresponders.json', '{}');
 }
@@ -43,9 +37,9 @@ if (!fs.existsSync('./data/autoreactions.json')) {
     fs.writeFileSync('./data/autoreactions.json', '{}');
 }
 
-if (!fs.existsSync('./data/secureRoles.json')) {
-    fs.writeFileSync('./data/secureRoles.json', '{}');
-}
+// =========================
+// FUNCTIONS
+// =========================
 
 function loadJSON(path) {
     return JSON.parse(fs.readFileSync(path, 'utf8'));
@@ -55,13 +49,19 @@ function saveJSON(path, data) {
     fs.writeFileSync(path, JSON.stringify(data, null, 4));
 }
 
+// =========================
+// LOAD DATA
+// =========================
+
 const config = loadJSON('./config.json');
 
 let levels = loadJSON('./data/levels.json');
-let whitelist = loadJSON('./data/whitelist.json');
 let autoresponders = loadJSON('./data/autoresponders.json');
 let autoreactions = loadJSON('./data/autoreactions.json');
-let secureRoles = loadJSON('./data/secureRoles.json');
+
+// =========================
+// CLIENT
+// =========================
 
 const client = new Client({
     intents: [
@@ -74,11 +74,11 @@ const client = new Client({
 });
 
 client.once('ready', () => {
-    console.log(`${client.user.tag} is online!`);
+    console.log(`${client.user.tag} is online`);
 });
 
 // =========================
-// WELCOME MESSAGE
+// WELCOME
 // =========================
 
 client.on('guildMemberAdd', async member => {
@@ -88,9 +88,8 @@ client.on('guildMemberAdd', async member => {
     if (!channel) return;
 
     const embed = new EmbedBuilder()
-        .setTitle('Welcome!')
-        .setDescription(`Welcome ${member} to the server!`)
-        .setColor('Green')
+        .setColor('#2b2d31')
+        .setDescription(`welcome ${member} <3`)
         .setThumbnail(member.user.displayAvatarURL())
         .setTimestamp();
 
@@ -98,7 +97,7 @@ client.on('guildMemberAdd', async member => {
 });
 
 // =========================
-// GOODBYE MESSAGE
+// GOODBYE
 // =========================
 
 client.on('guildMemberRemove', async member => {
@@ -108,9 +107,8 @@ client.on('guildMemberRemove', async member => {
     if (!channel) return;
 
     const embed = new EmbedBuilder()
-        .setTitle('Goodbye!')
-        .setDescription(`${member.user.tag} left the server.`)
-        .setColor('Red')
+        .setColor('#2b2d31')
+        .setDescription(`${member.user.tag} left`)
         .setTimestamp();
 
     channel.send({ embeds: [embed] });
@@ -124,24 +122,38 @@ client.on('messageCreate', async message => {
 
     if (message.author.bot) return;
 
-    // AUTORESPONDER
+    // =========================
+    // AUTORESPONSES
+    // =========================
+
     for (const trigger in autoresponders) {
+
         if (message.content.toLowerCase().includes(trigger.toLowerCase())) {
+
             message.channel.send(autoresponders[trigger]);
         }
     }
 
-    // AUTOREACTION
+    // =========================
+    // AUTOREACTIONS
+    // =========================
+
     for (const trigger in autoreactions) {
+
         if (message.content.toLowerCase().includes(trigger.toLowerCase())) {
+
             try {
                 await message.react(autoreactions[trigger]);
             } catch (err) {}
         }
     }
 
+    // =========================
     // LEVEL SYSTEM
+    // =========================
+
     if (!levels[message.author.id]) {
+
         levels[message.author.id] = {
             xp: 0,
             level: 1
@@ -157,33 +169,21 @@ client.on('messageCreate', async message => {
         levels[message.author.id].xp = 0;
         levels[message.author.id].level += 1;
 
-        message.channel.send(
-            `${message.author} leveled up to level ${levels[message.author.id].level}!`
-        );
+        const embed = new EmbedBuilder()
+            .setColor('#2b2d31')
+            .setDescription(
+                `${message.author} leveled up to level ${levels[message.author.id].level}`
+            );
 
-        const levelRoleName = `Level ${levels[message.author.id].level}`;
-
-        const role = message.guild.roles.cache.find(
-            r => r.name === levelRoleName
-        );
-
-        if (role) {
-            try {
-                await message.member.roles.add(role);
-
-                message.channel.send(
-                    `${message.author} earned ${role.name}!`
-                );
-
-            } catch (err) {
-                console.log(err);
-            }
-        }
+        message.channel.send({ embeds: [embed] });
     }
 
     saveJSON('./data/levels.json', levels);
 
-    // PREFIX CHECK
+    // =========================
+    // PREFIX
+    // =========================
+
     if (!message.content.startsWith(config.prefix)) return;
 
     const args = message.content
@@ -193,89 +193,310 @@ client.on('messageCreate', async message => {
 
     const cmd = args.shift().toLowerCase();
 
-    const isWhitelisted = whitelist.users.includes(message.author.id);
+    // =========================
+    // SETWELCOME
+    // =========================
 
-    // SET WELCOME CHANNEL
     if (cmd === 'setwelcome') {
 
         if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-            return message.reply('Administrator only.');
+            return message.reply('admin only');
         }
 
         const channel = message.mentions.channels.first();
 
         if (!channel) {
-            return message.reply('Mention a channel.');
+            return message.reply('mention a channel');
         }
 
         config.welcomeChannel = channel.id;
 
         saveJSON('./config.json', config);
 
-        message.reply(`Welcome channel set to ${channel}`);
+        message.reply(`welcome channel set to ${channel}`);
     }
 
-    // SET GOODBYE CHANNEL
+    // =========================
+    // SETGOODBYE
+    // =========================
+
     if (cmd === 'setgoodbye') {
 
         if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-            return message.reply('Administrator only.');
+            return message.reply('admin only');
         }
 
         const channel = message.mentions.channels.first();
 
         if (!channel) {
-            return message.reply('Mention a channel.');
+            return message.reply('mention a channel');
         }
 
         config.goodbyeChannel = channel.id;
 
         saveJSON('./config.json', config);
 
-        message.reply(`Goodbye channel set to ${channel}`);
+        message.reply(`goodbye channel set to ${channel}`);
     }
 
-    // SET PREFIX
+    // =========================
+    // SETPREFIX
+    // =========================
+
     if (cmd === 'setprefix') {
 
         if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-            return message.reply('Administrator only.');
+            return message.reply('admin only');
         }
 
         const newPrefix = args[0];
 
         if (!newPrefix) {
-            return message.reply('Provide a new prefix.');
+            return message.reply('provide a prefix');
         }
 
         config.prefix = newPrefix;
 
         saveJSON('./config.json', config);
 
-        message.reply(`Prefix changed to ${newPrefix}`);
+        message.reply(`prefix changed to ${newPrefix}`);
     }
 
-    // LEVEL COMMAND
+    // =========================
+    // ADD RESPONSE
+    // =========================
+
+    if (cmd === 'addresponse') {
+
+        if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+            return message.reply('admin only');
+        }
+
+        const trigger = args.shift()?.toLowerCase();
+        const response = args.join(' ');
+
+        if (!trigger || !response) {
+            return message.reply(`usage: ${config.prefix}addresponse <trigger> <response>`);
+        }
+
+        autoresponders[trigger] = response;
+
+        saveJSON('./data/autoresponders.json', autoresponders);
+
+        message.reply(`added autoresponse for "${trigger}"`);
+    }
+
+    // =========================
+    // REMOVE RESPONSE
+    // =========================
+
+    if (cmd === 'removeresponse') {
+
+        if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+            return message.reply('admin only');
+        }
+
+        const trigger = args[0]?.toLowerCase();
+
+        if (!trigger) {
+            return message.reply(`usage: ${config.prefix}removeresponse <trigger>`);
+        }
+
+        delete autoresponders[trigger];
+
+        saveJSON('./data/autoresponders.json', autoresponders);
+
+        message.reply(`removed autoresponse "${trigger}"`);
+    }
+
+    // =========================
+    // RESPONSES
+    // =========================
+
+    if (cmd === 'responses') {
+
+        const keys = Object.keys(autoresponders);
+
+        if (!keys.length) {
+            return message.reply('no autoresponses');
+        }
+
+        const embed = new EmbedBuilder()
+            .setColor('#2b2d31')
+            .setTitle('autoresponses')
+            .setDescription(
+                keys.map(k => `• ${k} → ${autoresponders[k]}`).join('\n')
+            );
+
+        message.channel.send({ embeds: [embed] });
+    }
+
+    // =========================
+    // ADD REACTION
+    // =========================
+
+    if (cmd === 'addreaction') {
+
+        if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+            return message.reply('admin only');
+        }
+
+        const trigger = args[0]?.toLowerCase();
+        const emoji = args[1];
+
+        if (!trigger || !emoji) {
+            return message.reply(`usage: ${config.prefix}addreaction <trigger> <emoji>`);
+        }
+
+        autoreactions[trigger] = emoji;
+
+        saveJSON('./data/autoreactions.json', autoreactions);
+
+        message.reply(`added reaction for "${trigger}"`);
+    }
+
+    // =========================
+    // REMOVE REACTION
+    // =========================
+
+    if (cmd === 'removereaction') {
+
+        if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+            return message.reply('admin only');
+        }
+
+        const trigger = args[0]?.toLowerCase();
+
+        if (!trigger) {
+            return message.reply(`usage: ${config.prefix}removereaction <trigger>`);
+        }
+
+        delete autoreactions[trigger];
+
+        saveJSON('./data/autoreactions.json', autoreactions);
+
+        message.reply(`removed reaction "${trigger}"`);
+    }
+
+    // =========================
+    // REACTIONS
+    // =========================
+
+    if (cmd === 'reactions') {
+
+        const keys = Object.keys(autoreactions);
+
+        if (!keys.length) {
+            return message.reply('no autoreactions');
+        }
+
+        const embed = new EmbedBuilder()
+            .setColor('#2b2d31')
+            .setTitle('autoreactions')
+            .setDescription(
+                keys.map(k => `• ${k} → ${autoreactions[k]}`).join('\n')
+            );
+
+        message.channel.send({ embeds: [embed] });
+    }
+
+    // =========================
+    // SIMPLE EMBED
+    // =========================
+
+    if (cmd === 'embed') {
+
+        if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+            return message.reply('admin only');
+        }
+
+        const text = args.join(' ');
+
+        if (!text) {
+            return message.reply(`usage: ${config.prefix}embed <message>`);
+        }
+
+        const embed = new EmbedBuilder()
+            .setColor('#2b2d31')
+            .setDescription(text)
+            .setFooter({
+                text: client.user.username
+            })
+            .setTimestamp();
+
+        message.channel.send({ embeds: [embed] });
+    }
+
+    // =========================
+    // ADVANCED EMBED
+    // =========================
+
+    if (cmd === 'embed2') {
+
+        if (!message.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
+            return message.reply('admin only');
+        }
+
+        const text = args.join(' ').split('|');
+
+        const title = text[0]?.trim();
+        const description = text[1]?.trim();
+
+        if (!title || !description) {
+            return message.reply(
+                `usage: ${config.prefix}embed2 <title> | <description>`
+            );
+        }
+
+        const embed = new EmbedBuilder()
+            .setColor('#2b2d31')
+            .setTitle(title)
+            .setDescription(description)
+            .setFooter({
+                text: client.user.username
+            })
+            .setTimestamp();
+
+        message.channel.send({ embeds: [embed] });
+    }
+
+    // =========================
+    // LEVEL
+    // =========================
+
     if (cmd === 'level') {
 
         message.reply(
-`Level: ${levels[message.author.id].level}
-XP: ${levels[message.author.id].xp}`
+`level: ${levels[message.author.id].level}
+xp: ${levels[message.author.id].xp}`
         );
     }
 
-    // HELP COMMAND
+    // =========================
+    // HELP
+    // =========================
+
     if (cmd === 'help') {
 
         const embed = new EmbedBuilder()
-            .setTitle('Commands')
-            .setColor('Blue')
+            .setColor('#2b2d31')
             .setDescription(`
-${config.prefix}setwelcome #channel
-${config.prefix}setgoodbye #channel
-${config.prefix}setprefix <prefix>
-${config.prefix}level
-`);
+\`${config.prefix}setwelcome\`
+\`${config.prefix}setgoodbye\`
+\`${config.prefix}setprefix\`
+\`${config.prefix}addresponse\`
+\`${config.prefix}removeresponse\`
+\`${config.prefix}responses\`
+\`${config.prefix}addreaction\`
+\`${config.prefix}removereaction\`
+\`${config.prefix}reactions\`
+\`${config.prefix}embed\`
+\`${config.prefix}embed2\`
+\`${config.prefix}level\`
+`)
+            .setFooter({
+                text: client.user.username
+            });
 
         message.channel.send({ embeds: [embed] });
     }
